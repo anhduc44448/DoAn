@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Chess Web</title>
+    <!-- load CSS từ static -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+    <h2>Chess Game</h2>
+    <div id="chessboard"></div>
+
+    <div style="margin-top: 10px;">
+        <button onclick="aiMove()">AI Move</button>
+        <button onclick="resetBoard()">Reset</button>
+    </div>
+
+    <!-- load JS từ static -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>
