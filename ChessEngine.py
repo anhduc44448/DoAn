@@ -593,4 +593,4 @@ class Move:
         move_string = self.piece_moved[1]
         if self.is_capture:
             move_string += "x"
-        return move_string + end_square;
+        return move_string + end_square
