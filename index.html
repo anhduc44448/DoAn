@@ -4,12 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Chess Web</title>
-    <!-- load CSS từ static -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <!-- SỬ DỤNG ĐƯỜNG DẪN TƯƠNG ĐỐI -->
+    <link rel="stylesheet" href="static/style.css">
 </head>
 
 <body>
     <h2>Chess Game</h2>
+    <div id="turn" style="margin-bottom:10px;font-weight:bold;"></div>
     <div id="chessboard"></div>
 
     <div style="margin-top: 10px;">
@@ -17,8 +18,7 @@
         <button onclick="resetBoard()">Reset</button>
     </div>
 
-    <!-- load JS từ static -->
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="static/script.js"></script>
 </body>
 
 </html>
