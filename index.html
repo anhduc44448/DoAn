@@ -3,22 +3,30 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Chess Web</title>
-    <!-- load CSS từ static -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>Realtime Chess</title>
+    <link rel="stylesheet" href="static/style.css">
+    <!-- Socket.IO client -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 </head>
 
 <body>
-    <h2>Chess Game</h2>
-    <div id="chessboard"></div>
+    <h2>♟ Realtime Chess</h2>
 
-    <div style="margin-top: 10px;">
-        <button onclick="aiMove()">AI Move</button>
-        <button onclick="resetBoard()">Reset</button>
+    <div>
+        <input type="text" id="roomInput" placeholder="Nhập Room ID">
+        <button onclick="joinRoom()">Join / Create Room</button>
+        <p id="status">Chưa tham gia phòng</p>
     </div>
 
-    <!-- load JS từ static -->
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <div id="turn"></div>
+    <div id="chessboard"></div>
+
+    <button onclick="resetBoard()">Reset Room</button>
+
+    <script src="static/script.js"></script>
+
+
+
 </body>
 
 </html>
