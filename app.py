@@ -1,70 +1,58 @@
-from flask import Flask, render_template, send_from_directory
+from flask import Flask, send_from_directory
 from flask_socketio import SocketIO, emit, join_room
 import os
 import copy
+from ChessEngine import GameState, Move  # Import đúng lớp và Move
 
-# ==============================
-# Khởi tạo Flask + SocketIO
-# ==============================
 app = Flask(__name__, static_folder="static", template_folder=".")
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# ==============================
-# Game State đơn giản
-# ==============================
-class GameState:
+class CustomGameState:
     def __init__(self):
-        # Bàn cờ mặc định
-        self.board = [
-            ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
-            ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["--", "--", "--", "--", "--", "--", "--", "--"],
-            ["wp", "wp", "wp", "wp", "wp", "wp", "wp", "wp"],
-            ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"],
-        ]
+        self.game_state = GameState()  # Sử dụng GameState từ ChessEngine
         self.white_to_move = True
 
     def make_move(self, from_pos, to_pos):
-        """Di chuyển quân cờ"""
-        fr, fc = from_pos["row"], from_pos["col"]
-        tr, tc = to_pos["row"], to_pos["col"]
+        # Chuyển đổi định dạng từ dict sang tuple cho Move
+        move = Move(
+            (from_pos["row"], from_pos["col"]),
+            (to_pos["row"], to_pos["col"]),
+            self.game_state.board
+        )
+        # Kiểm tra nước đi hợp lệ
+        valid_moves = self.game_state.getValidMoves()
+        if move in valid_moves:
+            self.game_state.makeMove(move)
+            self.white_to_move = not self.white_to_move
+            return True
+        return False
 
-        piece = self.board[fr][fc]
-        if piece == "--":
-            return False
+    def get_board(self):
+        # Trả về bảng cờ hiện tại
+        return self.game_state.board
 
-        # Đơn giản hóa: cho phép đi bất kỳ (không check luật)
-        self.board[tr][tc] = piece
-        self.board[fr][fc] = "--"
-        self.white_to_move = not self.white_to_move
-        return True
-
-# ==============================
-# Quản lý nhiều phòng
-# ==============================
 game_states = {}
 
-# ==============================
-# Routes
-# ==============================
 @app.route("/")
 def index():
     return send_from_directory(".", "index.html")
 
-# ==============================
-# SocketIO Events
-# ==============================
+@app.route('/static/<path:filename>')
+def serve_static(filename):
+    try:
+        return send_from_directory('static', filename)
+    except FileNotFoundError:
+        print(f"Error: File not found - static/{filename}")
+        return "File not found", 404
+
 @socketio.on("join")
 def on_join(data):
     room = data["room"]
     join_room(room)
     if room not in game_states:
-        game_states[room] = GameState()
+        game_states[room] = CustomGameState()
     gs = game_states[room]
-    emit("board_update", {"board": gs.board, "whiteToMove": gs.white_to_move}, room=room)
+    emit("board_update", {"board": gs.get_board(), "whiteToMove": gs.white_to_move}, room=room)
 
 @socketio.on("make_move")
 def on_make_move(data):
@@ -72,23 +60,18 @@ def on_make_move(data):
     gs = game_states.get(room)
     if not gs:
         return
-
     success = gs.make_move(data["from"], data["to"])
     if success:
-        emit("board_update", {"board": gs.board, "whiteToMove": gs.white_to_move}, room=room)
+        emit("board_update", {"board": gs.get_board(), "whiteToMove": gs.white_to_move}, room=room)
     else:
         emit("invalid_move", {"msg": "❌ Nước đi không hợp lệ!"}, to=request.sid)
 
 @socketio.on("reset")
 def on_reset(data):
     room = data["room"]
-    game_states[room] = GameState()
+    game_states[room] = CustomGameState()
     gs = game_states[room]
-    emit("board_update", {"board": gs.board, "whiteToMove": gs.white_to_move}, room=room)
+    emit("board_update", {"board": gs.get_board(), "whiteToMove": gs.white_to_move}, room=room)
 
-# ==============================
-# Run server
-# ==============================
 if __name__ == "__main__":
-    # Mở cho tất cả IP (LAN / internet)
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
